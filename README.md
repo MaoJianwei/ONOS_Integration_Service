@@ -1,6 +1,6 @@
-# ONOS_Device_Interface_For_Integration
+# ONOS_Integration_Service
 
-An Interface to integrate ONOS with other platforms, to introduce any devices into ONOS for visualization or management.
+An Interface to integrate ONOS with other platforms, to introduce any devices into ONOS for visualization or management purpose.
 
 ONOS Version: **2.5.1**, and it is easy to migrate to other versions.
 
@@ -10,7 +10,5 @@ Before compiling our project, you should merge the content of **modules.bzl** to
 
 
 ## Community Support
-
-Long term support(LTS) from 2018.05.15, by:
 
 :) [Jianwei Mao @ BUPT FNLab](https://www.maojianwei.com/) - ONOS China Ambassador - MaoJianwei2012@126.com / MaoJianwei2020@gmail.com
