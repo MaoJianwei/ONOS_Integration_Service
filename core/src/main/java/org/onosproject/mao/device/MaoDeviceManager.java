@@ -48,6 +48,7 @@ public class MaoDeviceManager implements MaoDeviceService {
 
         maoDeviceProvider = new MaoDeviceProvider();
         deviceProviderService = deviceProviderRegistry.register(maoDeviceProvider);
+
         log.info("Mao Device activated.");
     }
 
@@ -70,7 +71,7 @@ public class MaoDeviceManager implements MaoDeviceService {
                 .set(AnnotationKeys.PROTOCOL, "Mao protocol")
                 .build();
         DeviceDescription deviceDescription = new DefaultDeviceDescription(
-                URI.create("Mao-1"),
+                URI.create("mao:1"),
                 Device.Type.ROUTER,
                 "Mao Manufacturer",
                 "Mao Hardware v1.0",
@@ -78,17 +79,17 @@ public class MaoDeviceManager implements MaoDeviceService {
                 "Mao Serial 0-0-0-2-3-6",
                 new ChassisId("7181"),
                 sparseAnnotations);
-        deviceProviderService.deviceConnected(DeviceId.deviceId("Mao-1"), deviceDescription);
+        deviceProviderService.deviceConnected(DeviceId.deviceId("mao:1"), deviceDescription);
     }
 
     @Override
     public void removeDevice() {
-        deviceProviderService.deviceDisconnected(DeviceId.deviceId("Mao-1"));
+        deviceProviderService.deviceDisconnected(DeviceId.deviceId("mao:1"));
     }
 
     @Override
     public void addPort() {
-        DeviceId deviceId = DeviceId.deviceId("Mao-1");
+        DeviceId deviceId = DeviceId.deviceId("mao:1");
         List<PortDescription> portDescriptionList = new ArrayList<>();
 
         PortDescription portDescription = DefaultPortDescription.builder()
@@ -106,7 +107,7 @@ public class MaoDeviceManager implements MaoDeviceService {
 
     @Override
     public void removePort() {
-        DeviceId deviceId = DeviceId.deviceId("Mao-1");
+        DeviceId deviceId = DeviceId.deviceId("mao:1");
         PortDescription portDescription = DefaultPortDescription.builder()
                 .withPortNumber(PortNumber.portNumber(1, "ens10086"))
                 .type(Port.Type.FIBER)
@@ -120,7 +121,7 @@ public class MaoDeviceManager implements MaoDeviceService {
 
     @Override
     public void changePortStatus() {
-        DeviceId deviceId = DeviceId.deviceId("Mao-1");
+        DeviceId deviceId = DeviceId.deviceId("mao:1");
         PortDescription portDescription = DefaultPortDescription.builder()
                 .withPortNumber(PortNumber.portNumber(1, "ens10086"))
                 .type(Port.Type.FIBER)
@@ -137,7 +138,11 @@ public class MaoDeviceManager implements MaoDeviceService {
          * Creates a provider with the supplied identifier.
          */
         protected MaoDeviceProvider() {
-            super(new ProviderId("Mao", "Mao-Device-Provider"));
+            // Mao: caution!
+            // 1. Provider Scheme must be lower-case
+            // 2. DeviceId must be lower-case, and it must obey the Provider Scheme.
+            // 3. DeviceId must be "<provider-scheme>" + ":" + "<device-id>" format.
+            super(new ProviderId("mao", "Mao-Device-Provider"));
         }
 
         @Override
