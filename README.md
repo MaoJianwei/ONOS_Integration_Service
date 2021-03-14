@@ -2,7 +2,7 @@
 
 An Interface to integrate ONOS with other platforms, to introduce any devices into ONOS for visualization or management purpose.
 
-ONOS Version: **2.5.1**, and it is easy to migrate to other versions.
+ONOS Version: [**2.5.1**](https://github.com/opennetworkinglab/onos/tree/2.5.1), and it is easy to migrate to other versions.
 
 ## Compile
 
