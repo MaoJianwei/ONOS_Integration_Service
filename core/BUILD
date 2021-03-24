@@ -1,5 +1,5 @@
 COMPILE_DEPS = CORE_DEPS + [
-    "//apps/mao/api:onos-apps-mao-api",
+    "//apps/ONOS_Integration_Service/api:onos-apps-ONOS_Integration_Service-api",
 ]
 
 osgi_jar_with_tests(

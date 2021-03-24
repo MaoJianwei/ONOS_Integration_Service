@@ -1,13 +1,13 @@
 BUNDLES = [
-    "//apps/mao/api:onos-apps-mao-api",
-    "//apps/mao/cli:onos-apps-mao-cli",
-    "//apps/mao/core:onos-apps-mao-core",
-    #    "//apps/mao/web:onos-apps-mao-web",
+    "//apps/ONOS_Integration_Service/api:onos-apps-ONOS_Integration_Service-api",
+    "//apps/ONOS_Integration_Service/cli:onos-apps-ONOS_Integration_Service-cli",
+    "//apps/ONOS_Integration_Service/core:onos-apps-ONOS_Integration_Service-core",
+    "//apps/ONOS_Integration_Service/web:onos-apps-ONOS_Integration_Service-web",
 ]
 
-osgi_jar_with_tests(
-    api_package = "com.maojianwei.mao.device",
-)
+#osgi_jar_with_tests(
+#    api_package = "com.maojianwei.mao.device",
+#)
 
 onos_app(
     category = "GUI",
