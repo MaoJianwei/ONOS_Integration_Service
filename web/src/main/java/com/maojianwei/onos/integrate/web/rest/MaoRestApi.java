@@ -52,6 +52,13 @@ public class MaoRestApi extends AbstractWebResource {
     /**
      * Add one device.
      *
+     * {
+     *      "deviceId":"<device-id>",
+     *      "deviceName":"<device-name>",
+     *      "swVersion":"<sw-version>",
+     *      "manageProtocol":"<manage-protocol>"
+     * }
+     *
      * @param stream json.
      * @return
      */
@@ -98,6 +105,10 @@ public class MaoRestApi extends AbstractWebResource {
     /**
      * Remove one device.
      *
+     * {
+     *      "deviceId":"<device-id>"
+     * }
+     *
      * @param stream json.
      * @return
      */
@@ -138,10 +149,9 @@ public class MaoRestApi extends AbstractWebResource {
      *     "srcDeviceId": "<device-id>",
      *     "srcPortId": <port-number>,
      *     "srcPortName": "<port-name>",
-     *
      *     "dstDeviceId": "<device-id>",
      *     "dstPortId": <port-number>,
-     *     "dstPortName": "<port-name>",
+     *     "dstPortName": "<port-name>"
      * }
      *
      * @param stream json.
@@ -237,9 +247,8 @@ public class MaoRestApi extends AbstractWebResource {
      * {
      *     "srcDeviceId": "<device-id>",
      *     "srcPortId": <port-number>,
-     *
      *     "dstDeviceId": "<device-id>",
-     *     "dstPortId": <port-number>,
+     *     "dstPortId": <port-number>
      * }
      *
      * @param stream json.
