@@ -35,7 +35,9 @@ public class MaoDeviceAddPortCommand extends AbstractShellCommand {
     @Override
     protected void doExecute() {
         MaoDeviceService maoDeviceService = get(MaoDeviceService.class);
-        maoDeviceService.addPort();
+        maoDeviceService.addPort(
+                maoDeviceService.genDeviceId("1"), 18, "add-port 3/0/18"
+        );
 //        MacAddress macAddress = null;
 //        if (mac != null) {
 //            macAddress = MacAddress.valueOf(mac);

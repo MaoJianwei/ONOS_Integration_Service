@@ -10,11 +10,13 @@ public interface MaoDeviceService {
     void addDevice(DeviceId deviceId, String name, String version, String managementProtocol);
     void removeDevice(DeviceId deviceId);
 
-    void addPort();
-    void removePort();
+    void addPort(DeviceId deviceId, int portId);
+    void addPort(DeviceId deviceId, int portId, String portName);
+    void removePort(DeviceId deviceId, int portId);
     void changePortStatus();
 
-    void addLink();
-    void removeLink();
+    void addLink(DeviceId src, int srcPort, DeviceId dst, int dstPort);
+    void addLink(DeviceId src, int srcPort, String srcPortName, DeviceId dst, int dstPort, String dstPortName);
+    void removeLink(DeviceId src, int srcPort, DeviceId dst, int dstPort);
     void removeAllLinks(DeviceId deviceId);
 }

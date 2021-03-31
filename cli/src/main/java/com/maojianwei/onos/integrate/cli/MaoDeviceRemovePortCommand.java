@@ -35,7 +35,9 @@ public class MaoDeviceRemovePortCommand extends AbstractShellCommand {
     @Override
     protected void doExecute() {
         MaoDeviceService maoDeviceService = get(MaoDeviceService.class);
-        maoDeviceService.removePort();
+        maoDeviceService.removePort(
+                maoDeviceService.genDeviceId("1"), 18
+        );
 //        MacAddress macAddress = null;
 //        if (mac != null) {
 //            macAddress = MacAddress.valueOf(mac);

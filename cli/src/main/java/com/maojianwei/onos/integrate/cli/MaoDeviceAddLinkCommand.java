@@ -36,7 +36,10 @@ public class MaoDeviceAddLinkCommand extends AbstractShellCommand {
     @Override
     protected void doExecute() {
         MaoDeviceService maoDeviceService = get(MaoDeviceService.class);
-        maoDeviceService.addLink();
+        maoDeviceService.addLink(
+                maoDeviceService.genDeviceId("1"), 1, "GE 3/0/3",
+                maoDeviceService.genDeviceId("2"), 3, "GE 3/0/16"
+        );
 
 
 //        MacAddress macAddress = null;

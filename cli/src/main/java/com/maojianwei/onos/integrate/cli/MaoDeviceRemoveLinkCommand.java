@@ -36,7 +36,10 @@ public class MaoDeviceRemoveLinkCommand extends AbstractShellCommand {
     @Override
     protected void doExecute() {
         MaoDeviceService maoDeviceService = get(MaoDeviceService.class);
-        maoDeviceService.removeLink();
+        maoDeviceService.removeLink(
+                maoDeviceService.genDeviceId("1"), 1,
+                maoDeviceService.genDeviceId("2"), 3
+        );
 
 
 //        MacAddress macAddress = null;
