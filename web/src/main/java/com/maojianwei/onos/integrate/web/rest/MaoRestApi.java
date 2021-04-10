@@ -202,42 +202,6 @@ public class MaoRestApi extends AbstractWebResource {
         }
         root.put(JSON_KEY_ERR, JSON_ERR_OK);
         return ok(root).build();
-
-
-
-
-
-//        ObjectNode root = mapper().createObjectNode();
-//
-//        ObjectNode jsonTree;
-//        try {
-//            jsonTree = readTreeFromStream(mapper(), stream);
-//        } catch (IOException e) {
-//            root.put(JSON_KEY_ERR, JSON_ERR_INTERNAL);
-//            return ok(root).build();
-//        }
-//        JsonNode nodeDeviceId = jsonTree.get(JSON_KEY_DEVICE_ID);
-//        JsonNode nodeName = jsonTree.get(JSON_KEY_NAME);
-//        JsonNode nodeVersion = jsonTree.get(JSON_KEY_VERSION);
-//        JsonNode nodeProtocol = jsonTree.get(JSON_KEY_MGR_PROTOCOL);
-//
-//        if (nodeDeviceId == null) {
-//            root.put(JSON_KEY_ERR, JSON_ERR_INPUT_PARAM_LACK);
-//            return ok(root).build();
-//        }
-//        DeviceId deviceId = maoDeviceService.genDeviceId(nodeDeviceId.asText());
-//
-//        if (nodeName == null || nodeVersion == null || nodeProtocol == null) {
-//            maoDeviceService.addDevice(deviceId);
-//        } else {
-//            String name = nodeName.asText();
-//            String version = nodeVersion.asText();
-//            String manageProtocol = nodeProtocol.asText();
-//
-//            maoDeviceService.addDevice(deviceId, name, version, manageProtocol);
-//        }
-//        root.put(JSON_KEY_ERR, JSON_ERR_OK);
-//        return ok(root).build();
     }
 
 
@@ -291,42 +255,6 @@ public class MaoRestApi extends AbstractWebResource {
 
         root.put(JSON_KEY_ERR, JSON_ERR_OK);
         return ok(root).build();
-
-
-
-
-
-//        ObjectNode root = mapper().createObjectNode();
-//
-//        ObjectNode jsonTree;
-//        try {
-//            jsonTree = readTreeFromStream(mapper(), stream);
-//        } catch (IOException e) {
-//            root.put(JSON_KEY_ERR, JSON_ERR_INTERNAL);
-//            return ok(root).build();
-//        }
-//        JsonNode nodeDeviceId = jsonTree.get(JSON_KEY_DEVICE_ID);
-//        JsonNode nodeName = jsonTree.get(JSON_KEY_NAME);
-//        JsonNode nodeVersion = jsonTree.get(JSON_KEY_VERSION);
-//        JsonNode nodeProtocol = jsonTree.get(JSON_KEY_MGR_PROTOCOL);
-//
-//        if (nodeDeviceId == null) {
-//            root.put(JSON_KEY_ERR, JSON_ERR_INPUT_PARAM_LACK);
-//            return ok(root).build();
-//        }
-//        DeviceId deviceId = maoDeviceService.genDeviceId(nodeDeviceId.asText());
-//
-//        if (nodeName == null || nodeVersion == null || nodeProtocol == null) {
-//            maoDeviceService.addDevice(deviceId);
-//        } else {
-//            String name = nodeName.asText();
-//            String version = nodeVersion.asText();
-//            String manageProtocol = nodeProtocol.asText();
-//
-//            maoDeviceService.addDevice(deviceId, name, version, manageProtocol);
-//        }
-//        root.put(JSON_KEY_ERR, JSON_ERR_OK);
-//        return ok(root).build();
     }
 
 
@@ -335,6 +263,7 @@ public class MaoRestApi extends AbstractWebResource {
      *
      * @return
      */
+    @Deprecated
     @GET
     @Path("/netconf/biKnownLinks")
     @Produces(MediaType.APPLICATION_JSON)
@@ -371,6 +300,7 @@ public class MaoRestApi extends AbstractWebResource {
      *
      * @return
      */
+    @Deprecated
     @GET
     @Path("/netconf/biLinks")
     @Produces(MediaType.APPLICATION_JSON)
@@ -408,6 +338,7 @@ public class MaoRestApi extends AbstractWebResource {
      *
      * @return
      */
+    @Deprecated
     @GET
     @Path("/netconf/uniLinks")
     @Produces(MediaType.APPLICATION_JSON)
