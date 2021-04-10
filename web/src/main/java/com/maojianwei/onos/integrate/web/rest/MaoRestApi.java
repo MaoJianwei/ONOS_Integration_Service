@@ -369,4 +369,43 @@ public class MaoRestApi extends AbstractWebResource {
         String ret = "[{\"localDeviceName\":\"R3_PE1\",\"localPortName\":\"GigabitEthernet0/3/8\",\"remoteDeviceName\":null,\"remotePortName\":\"5825-7586-fe22\",\"remoteLink\":\"null.5825-7586-fe22\",\"localLink\":\"R3_PE1.GigabitEthernet0/3/8\"},{\"localDeviceName\":\"R3_PE1\",\"localPortName\":\"GigabitEthernet0/3/10\",\"remoteDeviceName\":null,\"remotePortName\":\"5825-7586-fe14\",\"remoteLink\":\"null.5825-7586-fe14\",\"localLink\":\"R3_PE1.GigabitEthernet0/3/10\"},{\"localDeviceName\":\"R3_PE1\",\"localPortName\":\"GigabitEthernet0/3/12\",\"remoteDeviceName\":\"R5_PE3\",\"remotePortName\":\"GigabitEthernet0/3/12\",\"remoteLink\":\"R5_PE3.GigabitEthernet0/3/12\",\"localLink\":\"R3_PE1.GigabitEthernet0/3/12\"},{\"localDeviceName\":\"R3_PE1\",\"localPortName\":\"GigabitEthernet0/3/18\",\"remoteDeviceName\":\"R4_PE2\",\"remotePortName\":\"GigabitEthernet0/3/18\",\"remoteLink\":\"R4_PE2.GigabitEthernet0/3/18\",\"localLink\":\"R3_PE1.GigabitEthernet0/3/18\"},{\"localDeviceName\":\"R4_PE2\",\"localPortName\":\"GigabitEthernet0/3/8\",\"remoteDeviceName\":null,\"remotePortName\":\"48dc-2d02-e6ee\",\"remoteLink\":\"null.48dc-2d02-e6ee\",\"localLink\":\"R4_PE2.GigabitEthernet0/3/8\"},{\"localDeviceName\":\"R4_PE2\",\"localPortName\":\"GigabitEthernet0/3/10\",\"remoteDeviceName\":null,\"remotePortName\":\"48dc-2d02-e6ef\",\"remoteLink\":\"null.48dc-2d02-e6ef\",\"localLink\":\"R4_PE2.GigabitEthernet0/3/10\"},{\"localDeviceName\":\"R4_PE2\",\"localPortName\":\"GigabitEthernet0/3/14\",\"remoteDeviceName\":\"R5_PE3\",\"remotePortName\":\"GigabitEthernet0/3/4\",\"remoteLink\":\"R5_PE3.GigabitEthernet0/3/4\",\"localLink\":\"R4_PE2.GigabitEthernet0/3/14\"},{\"localDeviceName\":\"R4_PE2\",\"localPortName\":\"GigabitEthernet0/3/18\",\"remoteDeviceName\":\"R3_PE1\",\"remotePortName\":\"GigabitEthernet0/3/18\",\"remoteLink\":\"R3_PE1.GigabitEthernet0/3/18\",\"localLink\":\"R4_PE2.GigabitEthernet0/3/18\"},{\"localDeviceName\":\"R5_PE3\",\"localPortName\":\"GigabitEthernet0/3/4\",\"remoteDeviceName\":\"R4_PE2\",\"remotePortName\":\"GigabitEthernet0/3/14\",\"remoteLink\":\"R4_PE2.GigabitEthernet0/3/14\",\"localLink\":\"R5_PE3.GigabitEthernet0/3/4\"},{\"localDeviceName\":\"R5_PE3\",\"localPortName\":\"GigabitEthernet0/3/12\",\"remoteDeviceName\":\"R3_PE1\",\"remotePortName\":\"GigabitEthernet0/3/12\",\"remoteLink\":\"R3_PE1.GigabitEthernet0/3/12\",\"localLink\":\"R5_PE3.GigabitEthernet0/3/12\"}]";
         return ok(ret).build();
     }
+
+
+    /**
+     * Demo1:
+     * Three inter-connected routers, while two of them are connected with three links like the LAG.
+     *
+     * @return
+     */
+    @GET
+    @Path("/demo1")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response demo1() {
+
+        MaoDeviceService mds = getService(MaoDeviceService.class);
+
+        DeviceId beijing = mds.genDeviceId("7181");
+        DeviceId shanghai = mds.genDeviceId("2015");
+        DeviceId guangzhou = mds.genDeviceId("0810");
+
+
+        mds.addDevice(beijing, "Beijing", "VRP V8R13C10", "Mao-NETCONF");
+        mds.addDevice(shanghai, "Shanghai", "Linux 5.11.12", "OpenSSH");
+        mds.addDevice(guangzhou, "Guangzhou", "MaoCloud 2021.5.1", "MaoCloud");
+
+
+        mds.addLink(beijing, 3, "GE 3/0/3", shanghai, 81, "ens81");
+
+        mds.addLink(beijing, 61, "GE 3/0/61", guangzhou, 31, "MaoLink-31");
+        mds.addLink(beijing, 62, "GE 3/0/62", guangzhou, 32, "MaoLink-32");
+        mds.addLink(beijing, 63, "GE 3/0/63", guangzhou, 33, "MaoLink-33");
+
+        mds.addLink(guangzhou, 36, "MaoLink-36", shanghai, 96, "ens96");
+
+
+        ObjectNode root = mapper().createObjectNode()
+                .put(JSON_KEY_ERR, JSON_ERR_OK)
+                .put(JSON_KEY_MSG, "Three inter-connected routers, while two of them are connected with three links like the LAG.");
+        return ok(root).build();
+    }
 }
