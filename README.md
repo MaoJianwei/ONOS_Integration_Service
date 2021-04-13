@@ -10,7 +10,7 @@ ONOS Version: [**2.5.1**](https://github.com/opennetworkinglab/onos/tree/2.5.1),
 
 ![https://raw.githubusercontent.com/MaoJianwei/ONOS_with_China_Map/master/Screenshot.png](https://raw.githubusercontent.com/MaoJianwei/ONOS_with_China_Map/master/demo-screenshoot-multiple-links.png)
 
-*More detail about Chinese map, please refer to [ONOS_with_China_Map](https://github.com/MaoJianwei/ONOS_with_China_Map) project.*
+*More details about Chinese map, please refer to [ONOS_with_China_Map](https://github.com/MaoJianwei/ONOS_with_China_Map) project.*
 
 .
 
