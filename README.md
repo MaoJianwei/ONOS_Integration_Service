@@ -17,8 +17,8 @@ ONOS Version: [**2.5.1**](https://github.com/opennetworkinglab/onos/tree/2.5.1),
 ## Matched Version
 
 * **ONOS**: git tag 2.5.8
-* **Intellij IDEA**: 2021.3.3 (with its own JRE. And I use Ultimate Edition.)
-* **Bazel Plugin for Intellij IDEA**: 2022.06.28.0.0-api-version-213 Google
+* **Intellij IDEA**: 2022.1.4 (with its own JRE. And I use Ultimate Edition.)
+* **Bazel Plugin for Intellij IDEA**: 2022.11.29.0.1-api-version-221 by Google
 * **Bazel**: 3.7.2 (for building and compiling)
 * **OpenJDK**: 64-Bit Server VM **Zulu**11.37+17-CA (build 11.0.6+10-LTS, mixed mode) (for running ONOS, you must use Zulu JDK, you have no choice)
 * **Maven**: you don't need to install maven.
