@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Component(
         immediate = true,
@@ -40,7 +41,6 @@ public class MaoDeviceManager implements MaoDeviceService {
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
     protected DeviceService deviceService;
 
-
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
     protected LinkProviderRegistry linkProviderRegistry;
 
@@ -54,9 +54,14 @@ public class MaoDeviceManager implements MaoDeviceService {
     private LinkProviderService linkProviderService;
 
 
+    private Map<DeviceId, Boolean> deviceOnlineStatus;
+
     private Map<DeviceId, List<PortDescription>> devicePortDescription;
 
-    private Map<DeviceId, Boolean> deviceOnlineStatus;
+    private Map<DeviceId, ReentrantLock> deviceLocks;
+
+
+    private final Object addDeviceLock = new Object();
 
     @Activate
     protected void activate() {
@@ -64,6 +69,7 @@ public class MaoDeviceManager implements MaoDeviceService {
 
         devicePortDescription = new ConcurrentHashMap<>();
         deviceOnlineStatus = new ConcurrentHashMap<>();
+        deviceLocks = new ConcurrentHashMap<>();
 
         maoDeviceProvider = new MaoDeviceProvider();
         deviceProviderService = deviceProviderRegistry.register(maoDeviceProvider);
@@ -91,6 +97,9 @@ public class MaoDeviceManager implements MaoDeviceService {
 
         deviceOnlineStatus.clear();
         deviceOnlineStatus = null;
+
+        deviceLocks.clear();
+        deviceLocks = null;
 
         log.info("Mao Device deactivated.");
     }
@@ -120,27 +129,48 @@ public class MaoDeviceManager implements MaoDeviceService {
      */
     @Override
     public void addDevice(DeviceId deviceId, String name, String version, String managementProtocol) {
-        SparseAnnotations sparseAnnotations = DefaultAnnotations.builder()
-                .set(AnnotationKeys.PROTOCOL, managementProtocol)
-                .set(AnnotationKeys.NAME, name) // 	FRIENDLY NAME
-                .build();
-        DeviceDescription deviceDescription = new DefaultDeviceDescription(
-                deviceId.uri(),
-                Device.Type.ROUTER,
-                UNDEFINED_STR,
-                UNDEFINED_STR,
-                version,
-                UNDEFINED_STR,
-                UNDEFINED_CHASSIS_ID,
-                sparseAnnotations);
-        deviceOnlineStatus.put(deviceId, true);
-        deviceProviderService.deviceConnected(deviceId, deviceDescription);
+
+//        log.info("Mao: addDevice invoked by {}", deviceId);
+
+        Boolean isOnline = deviceOnlineStatus.getOrDefault(deviceId, false);
+        if (!isOnline) {
+            synchronized (addDeviceLock) {
+                isOnline = deviceOnlineStatus.getOrDefault(deviceId, false);
+                if (!isOnline) {
+
+                    SparseAnnotations sparseAnnotations = DefaultAnnotations.builder()
+                            .set(AnnotationKeys.PROTOCOL, managementProtocol)
+                            .set(AnnotationKeys.NAME, name) // 	FRIENDLY NAME
+                            .build();
+                    DeviceDescription deviceDescription = new DefaultDeviceDescription(
+                            deviceId.uri(),
+                            Device.Type.ROUTER,
+                            UNDEFINED_STR,
+                            UNDEFINED_STR,
+                            version,
+                            UNDEFINED_STR,
+                            UNDEFINED_CHASSIS_ID,
+                            sparseAnnotations);
+
+                    deviceLocks.putIfAbsent(deviceId, new ReentrantLock());
+                    deviceOnlineStatus.put(deviceId, true);
+                    deviceProviderService.deviceConnected(deviceId, deviceDescription);
+                }
+            }
+        }
     }
 
     @Override
     public void removeDevice(DeviceId deviceId) {
-        deviceOnlineStatus.put(deviceId, false);
-        deviceProviderService.deviceDisconnected(deviceId);
+
+//        log.info("Mao: removeDevice invoked by {}", deviceId);
+
+        Boolean isOnline = deviceOnlineStatus.getOrDefault(deviceId, false);
+        if (isOnline) {
+            deviceOnlineStatus.put(deviceId, false);
+            deviceProviderService.deviceDisconnected(deviceId);
+            deviceLocks.remove(deviceId);
+        }
     }
 
 
@@ -159,53 +189,59 @@ public class MaoDeviceManager implements MaoDeviceService {
             return;
         }
 
-        // todo: use ReentranceLock to add/remove for a single deviceId.
-
-        List<PortDescription> portDescriptionList = devicePortDescription.get(deviceId);
-        if (portDescriptionList == null) {
-            portDescriptionList = new ArrayList<>();
+        ReentrantLock lock = deviceLocks.getOrDefault(deviceId, null);
+        if (lock == null) {
+            log.warn("Mao: device is not ready for addPort, lock doesn't exist - {}, {}, {}", deviceId, portId, portName);
+            return;
         }
 
-        PortDescription oldStatus = null;
-        for (int i = 0; i < portDescriptionList.size(); i++) {
-            if (portDescriptionList.get(i).portNumber().toLong() == portId) {
-                oldStatus = portDescriptionList.remove(i);
+        lock.lock();
+        try {
+            List<PortDescription> portDescriptionList = devicePortDescription.getOrDefault(deviceId, new ArrayList<>());
+
+            PortDescription oldStatus = null;
+            for (int i = 0; i < portDescriptionList.size(); i++) {
+                if (portDescriptionList.get(i).portNumber().toLong() == portId) {
+                    oldStatus = portDescriptionList.remove(i);
+                }
             }
+            PortDescription newStatus;
+            if (oldStatus != null) {
+                DefaultAnnotations annotations = DefaultAnnotations.builder()
+                        .putAll(oldStatus.annotations())
+                        .set(AnnotationKeys.PORT_NAME, portName)
+                        .build();
+
+                newStatus = DefaultPortDescription.builder()
+                        .withPortNumber(oldStatus.portNumber())
+                        .type(oldStatus.type())
+                        .portSpeed(oldStatus.portSpeed())
+                        .isEnabled(oldStatus.isEnabled())
+                        .isRemoved(oldStatus.isRemoved())
+                        .annotations(annotations)
+                        .build();
+            } else {
+                DefaultAnnotations annotations = DefaultAnnotations.builder()
+                        .set(AnnotationKeys.PORT_NAME, portName)
+                        .build();
+
+                newStatus = DefaultPortDescription.builder()
+                        .withPortNumber(PortNumber.portNumber(portId))
+                        .annotations(annotations)
+                        .type(Port.Type.FIBER)
+                        .portSpeed(800000)
+                        .isEnabled(true)
+                        .isRemoved(false)
+                        .build();
+            }
+
+            portDescriptionList.add(newStatus);
+            log.info("Mao add port\n {}", newStatus);
+            devicePortDescription.put(deviceId, portDescriptionList);
+            deviceProviderService.updatePorts(deviceId, portDescriptionList);
+        } finally {
+            lock.unlock();
         }
-        PortDescription newStatus;
-        if (oldStatus != null) {
-            DefaultAnnotations annotations = DefaultAnnotations.builder()
-                    .putAll(oldStatus.annotations())
-                    .set(AnnotationKeys.PORT_NAME, portName)
-                    .build();
-
-            newStatus = DefaultPortDescription.builder()
-                    .withPortNumber(oldStatus.portNumber())
-                    .type(oldStatus.type())
-                    .portSpeed(oldStatus.portSpeed())
-                    .isEnabled(oldStatus.isEnabled())
-                    .isRemoved(oldStatus.isRemoved())
-                    .annotations(annotations)
-                    .build();
-        } else {
-            DefaultAnnotations annotations = DefaultAnnotations.builder()
-                    .set(AnnotationKeys.PORT_NAME, portName)
-                    .build();
-
-            newStatus = DefaultPortDescription.builder()
-                    .withPortNumber(PortNumber.portNumber(portId))
-                    .annotations(annotations)
-                    .type(Port.Type.FIBER)
-                    .portSpeed(800000)
-                    .isEnabled(true)
-                    .isRemoved(false)
-                    .build();
-        }
-
-        portDescriptionList.add(newStatus);
-        log.info("Mao add port\n {}", newStatus);
-        devicePortDescription.put(deviceId, portDescriptionList);
-        deviceProviderService.updatePorts(deviceId, portDescriptionList);
     }
 
     @Override
@@ -219,19 +255,28 @@ public class MaoDeviceManager implements MaoDeviceService {
         }
 
 
-        // todo: use ReentranceLock to add/remove for a single deviceId.
-
-        List<PortDescription> portDescriptionList = devicePortDescription.get(deviceId);
-
-        for (int i = 0; i < portDescriptionList.size(); i++) {
-            if (portDescriptionList.get(i).portNumber().toLong() == portId) {
-                PortDescription portDescription = portDescriptionList.remove(i);
-                log.info("Mao remove port with description\n {}", portDescription);
-                deviceProviderService.deletePort(deviceId, portDescription);
-                return;
-            }
+        ReentrantLock lock = deviceLocks.getOrDefault(deviceId, null);
+        if (lock == null) {
+            log.warn("Mao: device is not ready for removePort, lock doesn't exist - {}, {}", deviceId, portId);
+            return;
         }
-        log.info("Mao remove port: portDescription not found: {} - {}\n", deviceId, portId);
+
+        lock.lock();
+        try {
+            List<PortDescription> portDescriptionList = devicePortDescription.get(deviceId);
+
+            for (int i = 0; i < portDescriptionList.size(); i++) {
+                if (portDescriptionList.get(i).portNumber().toLong() == portId) {
+                    PortDescription portDescription = portDescriptionList.remove(i);
+                    log.info("Mao remove port with description\n {}", portDescription);
+                    deviceProviderService.deletePort(deviceId, portDescription);
+                    return;
+                }
+            }
+            log.info("Mao remove port: portDescription not found: {} - {}\n", deviceId, portId);
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Deprecated
@@ -256,6 +301,11 @@ public class MaoDeviceManager implements MaoDeviceService {
 
     @Override
     public void addLink(DeviceId src, int srcPort, String srcPortName, DeviceId dst, int dstPort, String dstPortName) {
+
+//        log.info("Mao: addLink invoked by {} -> {}", src, dst);
+
+
+
         ConnectPoint srcCP = new ConnectPoint(src, PortNumber.portNumber(srcPort));
         ConnectPoint dstCP = new ConnectPoint(dst, PortNumber.portNumber(dstPort));
 
@@ -280,6 +330,9 @@ public class MaoDeviceManager implements MaoDeviceService {
 
     @Override
     public void removeLink(DeviceId src, int srcPort, DeviceId dst, int dstPort) {
+
+//        log.info("Mao: removeLink invoked by {} -> {}", src, dst);
+
 
         ConnectPoint srcCP = new ConnectPoint(src, PortNumber.portNumber(srcPort));
         ConnectPoint dstCP = new ConnectPoint(dst, PortNumber.portNumber(dstPort));
@@ -326,13 +379,15 @@ public class MaoDeviceManager implements MaoDeviceService {
 
         @Override
         public void roleChanged(DeviceId deviceId, MastershipRole newRole) {
-
+            if (deviceOnlineStatus.getOrDefault(deviceId, false)) {
+                log.info("Mao: the role for device {} changed to {}", deviceId, newRole);
+                deviceProviderService.receivedRoleReply(deviceId, newRole);
+            }
         }
 
         @Override
         public boolean isReachable(DeviceId deviceId) {
-            Boolean online = deviceOnlineStatus.get(deviceId);
-            return online != null && online;
+            return deviceOnlineStatus.getOrDefault(deviceId, false);
         }
 
         @Override
