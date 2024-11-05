@@ -2,7 +2,11 @@
 
 An Interface to integrate ONOS with other platforms, to introduce any devices into ONOS for visualization or management purpose.
 
-ONOS Version: [**2.5.1**](https://github.com/opennetworkinglab/onos/tree/2.5.1), and it is easy to migrate to other versions.
+ONOS Version: [**2.5.8**](https://github.com/opennetworkinglab/onos/tree/2.5.8), and it is easy to migrate to other versions. ([**2.5.1**](https://github.com/opennetworkinglab/onos/tree/2.5.1) was verified)
+
+.
+
+**Notes:** This project have been published at the **[ONOS_TopologyShow_ChineseMap](https://github.com/MaoJianwei/ONOS_TopologyShow_ChineseMap)** project, with CI/CD support, providing the Docker image. (2024.09.16)
 
 .
 
