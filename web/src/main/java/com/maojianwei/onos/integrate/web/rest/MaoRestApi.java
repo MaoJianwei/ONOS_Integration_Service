@@ -7,16 +7,18 @@ import org.onosproject.net.DeviceId;
 import org.onosproject.rest.AbstractWebResource;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Random;
 
 import static org.onlab.util.Tools.readTreeFromStream;
+import static org.onosproject.net.device.PortStatistics.mao_tag_level;
 
 @Path("MaoIntegration")
 public class MaoRestApi extends AbstractWebResource {
@@ -39,13 +41,19 @@ public class MaoRestApi extends AbstractWebResource {
     private static final String JSON_KEY_DST_PORT_ID = "dstPortId";
     private static final String JSON_KEY_DST_PORT_NAME = "dstPortName";
 
-    //
+    //    update custom tag
+
+    private static final String JSON_KEY_PORT_ID = "portId";
+    private static final String JSON_KEY_TAG_STRING = "tag";
+    private static final String JSON_KEY_TAG_LEVEL = "tagLevel";
+
 
     private static final String JSON_KEY_ERR = "err";
     private static final String JSON_KEY_MSG = "msg";
 
     private static final int JSON_ERR_OK = 0;
     private static final int JSON_ERR_INPUT_PARAM_LACK = -1;
+    private static final int JSON_ERR_INPUT_PARAM_ERROR = -2;
     private static final int JSON_ERR_INTERNAL = -500;
 
 
@@ -60,7 +68,7 @@ public class MaoRestApi extends AbstractWebResource {
      * }
      *
      * @param stream json.
-     * @return
+     * @return .
      */
     @POST
     @Path("addDevice")
@@ -110,7 +118,7 @@ public class MaoRestApi extends AbstractWebResource {
      * }
      *
      * @param stream json.
-     * @return
+     * @return .
      */
     @POST
     @Path("removeDevice")
@@ -155,7 +163,7 @@ public class MaoRestApi extends AbstractWebResource {
      * }
      *
      * @param stream json.
-     * @return
+     * @return .
      */
     @POST
     @Path("addBiLink")
@@ -205,6 +213,59 @@ public class MaoRestApi extends AbstractWebResource {
     }
 
 
+
+    /**
+     * Update the custom tag for one link.
+     *
+     * {
+     *      "deviceId":"<device-id>",
+     *      "portId":"<port-number>",
+     *      "tag":"<tag-string>",
+     *      "tagLevel":"<tag-level>"
+     * }
+     *
+     * @param stream json.
+     * @return .
+     */
+    @POST
+    @Path("updateCustomTag")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateCustomTag(InputStream stream) {
+        MaoDeviceService maoDeviceService = getService(MaoDeviceService.class);
+
+        ObjectNode root = mapper().createObjectNode();
+
+        ObjectNode jsonTree;
+        try {
+            jsonTree = readTreeFromStream(mapper(), stream);
+        } catch (IOException e) {
+            root.put(JSON_KEY_ERR, JSON_ERR_INTERNAL);
+            return ok(root).build();
+        }
+        JsonNode nodeDeviceId = jsonTree.get(JSON_KEY_DEVICE_ID);
+        JsonNode nodePortId = jsonTree.get(JSON_KEY_PORT_ID);
+        JsonNode nodeTag = jsonTree.get(JSON_KEY_TAG_STRING);
+        JsonNode nodeTagLevel = jsonTree.get(JSON_KEY_TAG_LEVEL);
+
+        if (nodeDeviceId == null || nodePortId == null || nodeTag == null || nodeTagLevel == null) {
+            root.put(JSON_KEY_ERR, JSON_ERR_INPUT_PARAM_LACK);
+            return ok(root).build();
+        }
+
+        if (!mao_tag_level.contains(nodeTagLevel.asText())) {
+            root.put(JSON_KEY_ERR, JSON_ERR_INPUT_PARAM_ERROR);
+            return ok(root).build();
+        }
+
+        DeviceId deviceId = maoDeviceService.genDeviceId(nodeDeviceId.asText());
+        maoDeviceService.updatePortTag(deviceId, nodePortId.asInt(), nodeTagLevel.asText(), nodeTag.asText());
+
+        root.put(JSON_KEY_ERR, JSON_ERR_OK);
+        return ok(root).build();
+    }
+
+
     /**
      * Remove one bidirectional link.
      *
@@ -216,7 +277,7 @@ public class MaoRestApi extends AbstractWebResource {
      * }
      *
      * @param stream json.
-     * @return
+     * @return .
      */
     @POST
     @Path("removeBiLink")
@@ -259,9 +320,9 @@ public class MaoRestApi extends AbstractWebResource {
 
 
     /**
-     * GET http://66.6.1.104:8080/netconf/biKnownLinks
+     * GET <a href="http://127.0.0.1:8181/netconf/biKnownL">...</a>inks
      *
-     * @return
+     * @return .
      */
     @Deprecated
     @GET
@@ -296,9 +357,9 @@ public class MaoRestApi extends AbstractWebResource {
     }
 
     /**
-     * GET http://66.6.1.104:8080/netconf/biLinks
+     * GET <a href="http://127.0.0.1:8181/netconf/biLinks">...</a>
      *
-     * @return
+     * @return .
      */
     @Deprecated
     @GET
@@ -334,9 +395,9 @@ public class MaoRestApi extends AbstractWebResource {
 
 
     /**
-     * GET http://66.6.1.104:8080/netconf/uniLinks
+     * GET <a href="http://127.0.0.1:8181/netconf/uniLinks">...</a>
      *
-     * @return
+     * @return .
      */
     @Deprecated
     @GET
@@ -375,7 +436,7 @@ public class MaoRestApi extends AbstractWebResource {
      * Demo1:
      * Three inter-connected routers, while two of them are connected with three links like the LAG.
      *
-     * @return
+     * @return .
      */
     @GET
     @Path("/demo1")
@@ -406,6 +467,133 @@ public class MaoRestApi extends AbstractWebResource {
         ObjectNode root = mapper().createObjectNode()
                 .put(JSON_KEY_ERR, JSON_ERR_OK)
                 .put(JSON_KEY_MSG, "Three inter-connected routers, while two of them are connected with three links like the LAG.");
+        return ok(root).build();
+    }
+
+
+    private static long portStatisticTemp_sendTotalBytes1 = 0L;
+    private static long portStatisticTemp_sendTotalBytes2 = 0L;
+    private static long portStatisticTemp_sendTotalPackets1 = 0L;
+    private static long portStatisticTemp_sendTotalPackets2 = 0L;
+
+
+    private static final Random random = new Random();
+
+
+
+    /**
+     * Demo2:
+     *
+     * @return .
+     */
+    @GET
+    @Path("/demo2")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response demo2() {
+
+        MaoDeviceService maoDeviceService = getService(MaoDeviceService.class);
+
+        DeviceId deviceIdQingdao = maoDeviceService.genDeviceId("QingdaoRadar");
+        maoDeviceService.addDevice(deviceIdQingdao);
+
+        DeviceId deviceIdBeijing = maoDeviceService.genDeviceId("BeijingTower");
+        maoDeviceService.addDevice(deviceIdBeijing);
+
+        maoDeviceService.addLink(deviceIdQingdao, 3, deviceIdBeijing, 6);
+
+//        for (int i = 0; i < 10000; i++) {
+        portStatisticTemp_sendTotalBytes1 += random.nextInt(1000000);
+        maoDeviceService.reportPortStatistics(deviceIdQingdao, 3, portStatisticTemp_sendTotalBytes1, portStatisticTemp_sendTotalPackets1);
+        portStatisticTemp_sendTotalBytes2 += random.nextInt(1000000);
+        maoDeviceService.reportPortStatistics(deviceIdBeijing, 6, portStatisticTemp_sendTotalBytes2, portStatisticTemp_sendTotalPackets2);
+//
+//            try {
+//                Thread.sleep(800);
+//            } catch (Exception e) {
+//                ObjectNode root = mapper().createObjectNode()
+//                        .put(JSON_KEY_ERR, JSON_ERR_OK)
+//                        .put(JSON_KEY_MSG, e.getMessage());
+//                return ok(root).build();
+//            }
+//        }
+
+        ObjectNode root = mapper().createObjectNode()
+                .put(JSON_KEY_ERR, JSON_ERR_OK)
+                .put(JSON_KEY_MSG, "Demo2.");
+        return ok(root).build();
+    }
+
+
+    /**
+     * Demo2.5:
+     *
+     * @return .
+     */
+    @GET
+    @Path("/demo2.5")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response demo2_5() {
+
+        MaoDeviceService maoDeviceService = getService(MaoDeviceService.class);
+
+        DeviceId deviceIdQingdao = maoDeviceService.genDeviceId("QingdaoRadar");
+//        maoDeviceService.addDevice(deviceIdQingdao);
+
+//        DeviceId deviceIdBeijing = maoDeviceService.genDeviceId("BeijingTower");
+//        maoDeviceService.addDevice(deviceIdBeijing);
+
+//        maoDeviceService.addLink(deviceIdQingdao, 3, deviceIdBeijing, 6);
+
+//        for (int i = 0; i < 10000; i++) {
+        portStatisticTemp_sendTotalBytes1 += random.nextInt(2000000000);
+        portStatisticTemp_sendTotalPackets1 += 1000;
+        maoDeviceService.reportPortStatistics(deviceIdQingdao, 3, portStatisticTemp_sendTotalBytes1, portStatisticTemp_sendTotalPackets1);
+//            portStatisticTemp_sendTotalBytes2 += 1000000; // random.nextInt(10000000);
+        portStatisticTemp_sendTotalPackets2 += 3000;
+//            maoDeviceService.reportPortStatistics(deviceIdBeijing, 6, portStatisticTemp_sendTotalBytes2, portStatisticTemp_sendTotalPackets2);
+
+//            try {
+//                Thread.sleep(1000);
+//            } catch (Exception e) {
+//                ObjectNode root = mapper().createObjectNode()
+//                        .put(JSON_KEY_ERR, JSON_ERR_OK)
+//                        .put(JSON_KEY_MSG, e.getMessage());
+//                return ok(root).build();
+//            }
+//        }
+
+        ObjectNode root = mapper().createObjectNode()
+                .put(JSON_KEY_ERR, JSON_ERR_OK)
+                .put(JSON_KEY_MSG, "Demo2.5 : " + portStatisticTemp_sendTotalBytes1 + " : " + portStatisticTemp_sendTotalPackets1);
+        return ok(root).build();
+    }
+
+    private static int levelIndex = 0;
+
+    /**
+     * Demo2.6:
+     *
+     * @return .
+     */
+    @GET
+    @Path("/demo2.6")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response demo2_6() {
+
+        MaoDeviceService maoDeviceService = getService(MaoDeviceService.class);
+
+
+        DeviceId deviceIdQingdao = maoDeviceService.genDeviceId("QingdaoRadar");
+//        DeviceId deviceIdBeijing = maoDeviceService.genDeviceId("BeijingTower");
+
+        maoDeviceService.updatePortTag(deviceIdQingdao, 3, mao_tag_level.get(levelIndex), "QINGDAO-RADAR-" + System.currentTimeMillis());
+
+        ObjectNode root = mapper().createObjectNode()
+                .put(JSON_KEY_ERR, JSON_ERR_OK)
+                .put(JSON_KEY_MSG, "Demo2.6 : " + mao_tag_level.get(levelIndex) + " : QINGDAO-RADAR" + System.currentTimeMillis());
+
+        levelIndex = (levelIndex == 3) ? 0 : (levelIndex + 1) ;
+
         return ok(root).build();
     }
 }

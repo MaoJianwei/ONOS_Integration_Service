@@ -1,7 +1,7 @@
 package com.maojianwei.onos.integrate.core;
 
-import org.onlab.packet.ChassisId;
 import com.maojianwei.onos.integrate.api.MaoDeviceService;
+import org.onlab.packet.ChassisId;
 import org.onosproject.net.*;
 import org.onosproject.net.device.*;
 import org.onosproject.net.link.*;
@@ -11,12 +11,11 @@ import org.osgi.service.component.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static org.onosproject.net.device.PortStatistics.*;
 
 @Component(
         immediate = true,
@@ -293,6 +292,57 @@ public class MaoDeviceManager implements MaoDeviceService {
         deviceProviderService.portStatusChanged(deviceId, portDescription);
     }
 
+
+    @Override
+    public void updatePortTag(DeviceId deviceId, long portId, String tagLevel, String tag) {
+        Set<PortStatistics> stats = new HashSet<>();
+
+        DefaultAnnotations anno = DefaultAnnotations.builder()
+                .set(ANNOTATION_MAO_TAG, tag)
+                .set(ANNOTATION_MAO_TAG_LEVEL, tagLevel)
+                .build();
+
+        DefaultPortStatistics ps = DefaultPortStatistics.builder()
+                .setDeviceId(deviceId)
+                .setPort(PortNumber.portNumber(portId))
+                .setAnnotations(anno)
+                .build();
+
+        stats.add(ps);
+
+        deviceProviderService.updatePortStatistics(deviceId, stats);
+
+//        log.info("Mao: device {} port {} tagLevel: {}, tag: {}", deviceId, portId, tagLevel, tag);
+    }
+
+    @Override
+    public void reportPortStatistics(DeviceId deviceId, long portId, long sendTotalBytes, long sendTotalPackets) {
+        Set<PortStatistics> stats = new HashSet<>();
+
+        DefaultPortStatistics stat = DefaultPortStatistics.builder()
+                .setDeviceId(deviceId)
+                .setPort(PortNumber.portNumber(portId))
+//                .setPacketsReceived(0)
+                .setPacketsSent(sendTotalPackets)
+//                .setBytesReceived(0)
+                .setBytesSent(sendTotalBytes)
+//                .setPacketsRxDropped(0)
+//                .setPacketsTxDropped(0)
+//                .setPacketsRxErrors(0)
+//                .setPacketsTxErrors(0)
+//                .setDurationSec(0)
+//                .setDurationNano(0)
+                // .setAnnotations()
+                .build();
+
+        stats.add(stat);
+
+        deviceProviderService.updatePortStatistics(deviceId, stats);
+
+//        log.info("Mao: device {} port {} sendTotalBytes {} sendTotalPackets {}", deviceId, portId, sendTotalBytes, sendTotalPackets);
+    }
+
+
     @Override
     public void addLink(DeviceId src, int srcPort, DeviceId dst, int dstPort) {
 
@@ -380,7 +430,7 @@ public class MaoDeviceManager implements MaoDeviceService {
         @Override
         public void roleChanged(DeviceId deviceId, MastershipRole newRole) {
             if (deviceOnlineStatus.getOrDefault(deviceId, false)) {
-                log.info("Mao: the role for device {} changed to {}", deviceId, newRole);
+//                log.info("Mao: the role for device {} changed to {}", deviceId, newRole);
                 deviceProviderService.receivedRoleReply(deviceId, newRole);
             }
         }

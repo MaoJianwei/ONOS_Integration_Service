@@ -15,6 +15,19 @@ public interface MaoDeviceService {
     void removePort(DeviceId deviceId, int portId);
     void changePortStatus();
 
+    /**
+     * For tag:
+     * "" means "no tag, no color"
+     * " " means "no tag, only color"
+     *
+     * @param deviceId .
+     * @param portId .
+     * @param tagLevel .
+     * @param tag .
+     */
+    void updatePortTag(DeviceId deviceId, long portId, String tagLevel, String tag);
+    void reportPortStatistics(DeviceId deviceId, long portId, long sendTotalBytes, long sendTotalPackets);
+
     void addLink(DeviceId src, int srcPort, DeviceId dst, int dstPort);
     void addLink(DeviceId src, int srcPort, String srcPortName, DeviceId dst, int dstPort, String dstPortName);
     void removeLink(DeviceId src, int srcPort, DeviceId dst, int dstPort);
