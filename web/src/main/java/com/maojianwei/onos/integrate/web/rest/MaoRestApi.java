@@ -217,6 +217,12 @@ public class MaoRestApi extends AbstractWebResource {
     /**
      * Update the custom tag for one link.
      *
+     * For tag:
+     *
+     * "" means "no tag, no color"
+     *
+     * " " means "no tag, only color"
+     *
      * {
      *      "deviceId":"<device-id>",
      *      "portId":"<port-number>",
@@ -320,7 +326,7 @@ public class MaoRestApi extends AbstractWebResource {
 
 
     /**
-     * GET <a href="http://127.0.0.1:8181/netconf/biKnownL">...</a>inks
+     * .
      *
      * @return .
      */
@@ -357,7 +363,7 @@ public class MaoRestApi extends AbstractWebResource {
     }
 
     /**
-     * GET <a href="http://127.0.0.1:8181/netconf/biLinks">...</a>
+     * .
      *
      * @return .
      */
@@ -395,7 +401,9 @@ public class MaoRestApi extends AbstractWebResource {
 
 
     /**
-     * GET <a href="http://127.0.0.1:8181/netconf/uniLinks">...</a>
+     * .
+     *
+     * <a href="http://127.0.0.1:8181/netconf/uniLinks"></a>.
      *
      * @return .
      */
@@ -433,8 +441,7 @@ public class MaoRestApi extends AbstractWebResource {
 
 
     /**
-     * Demo1:
-     * Three inter-connected routers, while two of them are connected with three links like the LAG.
+     * Demo1: Three inter-connected routers, while two of them are connected with three links like the LAG.
      *
      * @return .
      */
@@ -482,7 +489,7 @@ public class MaoRestApi extends AbstractWebResource {
 
 
     /**
-     * Demo2:
+     * .
      *
      * @return .
      */
@@ -525,7 +532,7 @@ public class MaoRestApi extends AbstractWebResource {
 
 
     /**
-     * Demo2.5:
+     * .
      *
      * @return .
      */
@@ -571,7 +578,7 @@ public class MaoRestApi extends AbstractWebResource {
     private static int levelIndex = 0;
 
     /**
-     * Demo2.6:
+     * .
      *
      * @return .
      */
